@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engram</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+          colors: {
+            surface: '#0d0d0d',
+            panel: '#141414',
+            border: '#222222',
+            accent: '#4f7fff',
+            muted: '#444444',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #0d0d0d; }
+    textarea:focus { outline: none; }
+    .result-row { border-left: 2px solid #4f7fff; }
+    #answer-text p { margin-bottom: 0.75rem; }
+    #answer-text ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    #answer-text ol { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    #answer-text li { margin-bottom: 0.25rem; }
+    #answer-text strong { color: #fff; }
+    #answer-text code { background: #1e1e1e; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.85em; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0d0d0d; }
+    ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+  </style>
+</head>
+<body class="font-mono text-gray-200 min-h-screen">
+
+  <div class="max-w-3xl mx-auto px-6 py-16">
+
+    <!-- Header -->
+    <div class="mb-12">
+      <h1 class="text-2xl font-medium tracking-tight text-white">engram</h1>
+      <p class="text-muted text-sm mt-1">long-term memory for your data</p>
+    </div>
+
+    <!-- Input -->
+    <div class="bg-panel border border-border rounded-lg p-4">
+      <textarea
+        id="question"
+        rows="4"
+        placeholder="Ask anything about your notes, emails, or messages..."
+        class="w-full bg-transparent text-gray-200 text-sm placeholder-muted resize-none leading-relaxed"
+      ></textarea>
+      <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+        <div id="status" class="text-xs text-muted"></div>
+        <div class="flex gap-2">
+          <button
+            onclick="sync()"
+            class="px-3 py-1.5 text-xs text-muted border border-border rounded hover:border-gray-500 hover:text-gray-300 transition-colors duration-200"
+          >
+            refresh data
+          </button>
+          <button
+            onclick="ask()"
+            class="px-4 py-1.5 text-xs text-white bg-accent rounded hover:bg-blue-500 transition-colors duration-200"
+          >
+            ask
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Answer -->
+    <div id="answer" class="mt-6 hidden">
+      <div class="bg-panel border border-accent border-opacity-40 rounded-lg p-5">
+        <p class="text-xs text-accent uppercase tracking-wider mb-3">answer</p>
+        <p id="answer-text" class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap"></p>
+      </div>
+    </div>
+
+    <!-- Sources -->
+    <div id="sources-section" class="hidden">
+      <p class="text-xs text-muted uppercase tracking-wider mt-6 mb-3">sources</p>
+      <div id="results" class="space-y-3"></div>
+    </div>
+
+  </div>
+
+  <script>
+    async function ask() {
+      const question = document.getElementById("question").value.trim();
+      if (!question) return;
+
+      clearResults();
+
+      // Phase 1: query the database
+      setStatus("querying database...");
+      const fetchRes = await fetch("/query/fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      const fetchData = await fetchRes.json();
+
+      if (!fetchRes.ok) {
+        renderError(fetchData.detail);
+        setStatus("");
+        return;
+      }
+
+      renderResults(fetchData.results);
+
+      // Phase 2: synthesize answer
+      setStatus("formulating answer...");
+      const synthRes = await fetch("/query/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, results: fetchData.results }),
+      });
+
+      const synthData = await synthRes.json();
+      setStatus("");
+
+      if (!synthRes.ok) {
+        renderError(synthData.detail);
+        return;
+      }
+
+      renderAnswer(synthData.answer);
+    }
+
+    async function sync() {
+      setStatus("syncing...");
+      const res = await fetch("/sync", { method: "POST" });
+      const data = await res.json();
+      setStatus(data.status);
+      setTimeout(() => setStatus(""), 3000);
+    }
+
+    function renderResults(results) {
+      const container = document.getElementById("results");
+      const section = document.getElementById("sources-section");
+
+      if (!results || results.length === 0) {
+        section.classList.add("hidden");
+        return;
+      }
+
+      section.classList.remove("hidden");
+
+      results.forEach(row => {
+        const div = document.createElement("div");
+        div.className = "result-row bg-panel border border-border rounded-lg p-4 pl-5";
+
+        const source = row.source ? `<span class="text-xs text-accent uppercase tracking-wider">${row.source}</span>` : "";
+        const title = row.title ? `<p class="text-sm font-medium text-white mt-1">${row.title}</p>` : "";
+        const body = row.body ? `<p class="text-sm text-gray-400 mt-2 leading-relaxed">${truncate(row.body, 300)}</p>` : "";
+        const date = row.created_at ? `<p class="text-xs text-muted mt-3">${formatDate(row.created_at)}</p>` : "";
+
+        div.innerHTML = `${source}${title}${body}${date}`;
+        container.appendChild(div);
+      });
+    }
+
+    function renderError(msg) {
+      const container = document.getElementById("results");
+      container.innerHTML = `<p class="text-sm text-red-400">error: ${msg}</p>`;
+    }
+
+    function renderAnswer(text) {
+      if (!text) return;
+      document.getElementById("answer-text").innerHTML = marked.parse(text);
+      document.getElementById("answer").classList.remove("hidden");
+    }
+
+    function setStatus(msg) { document.getElementById("status").textContent = msg; }
+    function clearResults() {
+      document.getElementById("results").innerHTML = "";
+      document.getElementById("sources-section").classList.add("hidden");
+      document.getElementById("answer").classList.add("hidden");
+      document.getElementById("answer-text").textContent = "";
+    }
+    function truncate(str, n) { return str.length > n ? str.slice(0, n) + "..." : str; }
+    function formatDate(ts) { return new Date(ts).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }); }
+
+    document.getElementById("question").addEventListener("keydown", function(e) {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) ask();
+    });
+  </script>
+
+</body>
+</html>
