@@ -21,11 +21,10 @@ Return only the raw SQL with no explanation, no markdown, no code fences.
 """
 
 SYNTHESIS_CONTEXT = """
-You are a personal knowledge assistant. The user asked a question and the following documents were retrieved from their personal context store (Obsidian notes, emails, Slack messages).
-
-Read the documents and answer the user's question directly and concisely.
-Cite which source each insight came from (obsidian, gmail, or slack).
-If the documents don't contain enough information to answer, say so.
+Answer the question using only the documents provided. Be brief. No preamble.
+- One short paragraph or a tight bullet list — whichever fits better.
+- After each claim, note the source in parentheses: (obsidian), (gmail), or (slack).
+- If the documents don't answer the question, say so in one sentence.
 """
 
 

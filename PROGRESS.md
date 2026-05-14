@@ -20,35 +20,20 @@
 1. docker-compose.yml + Dockerfile
 2. db/schema.sql + db/migrate.py
 3. ingestion/db.py
-4. agent/query.py
+4. agent/query.py (two-phase: SQL fetch + synthesis)
 5. api/main.py
-6. frontend/index.html
+6. frontend/index.html (redesigned — stage loader, source badges, markdown answer)
 7. ingestion/sources/obsidian.py
 8. ingestion/scheduler.py
 9. ingestion/sources/slack.py
+10. ingestion/sources/gmail.py (OAuth2, label filter)
+11. README.md + assets/ (diagrams embedded)
 
 ## Roadmap
-### Gmail ingestion
-- Create `ingestion/sources/gmail.py`
-- Label filter: only ingest emails tagged `engram` in Gmail
-- OAuth2 setup: Google Cloud project, credentials.json, gmail readonly scope
-- High-water mark on received date
-
-### Phase 2 reasoning
-- Two-phase query in `agent/query.py`
-- Phase 1: Claude writes SQL, fetch relevant rows
-- Phase 2: Claude reads those rows and synthesizes an actual answer
-- Currently Claude only returns raw rows — this makes it actually answer questions
-
-### Polish
-- Remove SQL from status bar (debug only, not user-facing)
-- Add "sources" label above document cards
-
 ### GitHub + README
 - ✅ git init and push to new repo
-- ✅ Write README
-- README is too long — needs to be more concise
-- Create Canva diagrams to replace text-heavy explanations (architecture flow, why access ≠ data)
+- ✅ Write README (Stop Slop rules applied)
+- ✅ Diagrams created (Excalidraw → PNG, embedded in README)
 - Record demo video: one question, three sources, one synthesized answer
 - Embed video in README
 
@@ -61,6 +46,11 @@
 - Sync interval (hardcoded for now, configurable later)
 
 ## Session log
+### 2026-05-13 (session 2)
+- Frontend fully redesigned: 3-stage progress indicator (writing query → fetching sources → synthesizing), source badges (obsidian/gmail/slack color-coded), fade-in animations, tighter card layout
+- Synthesis prompt tightened: no preamble, one paragraph or bullet list, inline source citations
+- PROGRESS.md updated to reflect completed work
+
 ### 2026-05-13
 - Project scoped: unified Postgres intermediary for multi-source LLM queries
 - All architecture decisions locked

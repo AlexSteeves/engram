@@ -1,201 +1,505 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Engram</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Engram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/assets/favicon/site.webmanifest" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { mono: ["JetBrains Mono", "monospace"] },
+            colors: {
+              ivory: "#F7F2E8",
+              parchment: "#EDE7D5",
+              vellum: "#E4DCCA",
+              ruled: "#D8CFBA",
+              gold: "#C9A84C",
+              "gold-light": "#E2C97E",
+              "gold-dim": "#A08030",
+              purple: "#6B3FA0",
+              "purple-deep": "#4E2D78",
+              ink: "#2C1F0E",
+              quill: "#6B5C3E",
+              faint: "#A8976E",
+            },
           },
-          colors: {
-            surface: '#0d0d0d',
-            panel: '#141414',
-            border: '#222222',
-            accent: '#4f7fff',
-            muted: '#444444',
-          }
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f7f2e8;
+      }
+      textarea {
+        outline: none;
+      }
+      textarea::placeholder {
+        color: #c4b48a;
+      }
+
+      /* Source badges — gold-toned variants */
+      .source-obsidian {
+        background: #f0ead8;
+        color: #6b5c3e;
+        border-color: #c9a84c;
+      }
+      .source-gmail {
+        background: #f0ead8;
+        color: #6b5c3e;
+        border-color: #c9a84c;
+      }
+      .source-slack {
+        background: #f0ead8;
+        color: #6b5c3e;
+        border-color: #c9a84c;
+      }
+      .dot-obsidian {
+        background: #6b3fa0;
+      }
+      .dot-gmail {
+        background: #c9a84c;
+      }
+      .dot-slack {
+        background: #a08030;
+      }
+
+      .stage {
+        transition:
+          color 0.2s,
+          opacity 0.2s;
+      }
+      .stage.active {
+        color: #6b3fa0;
+        font-weight: 500;
+      }
+      .stage.done {
+        color: #c9a84c;
+      }
+      .stage.pending {
+        color: #c4b48a;
+      }
+
+      .stage-line {
+        transition: background 0.35s;
+      }
+      .stage-line.done {
+        background: #c9a84c;
+      }
+
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          opacity: 0.25;
+          transform: scale(0.75);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
         }
       }
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    body { background-color: #0d0d0d; }
-    textarea:focus { outline: none; }
-    .result-row { border-left: 2px solid #4f7fff; }
-    #answer-text p { margin-bottom: 0.75rem; }
-    #answer-text ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
-    #answer-text ol { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
-    #answer-text li { margin-bottom: 0.25rem; }
-    #answer-text strong { color: #fff; }
-    #answer-text code { background: #1e1e1e; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.85em; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #0d0d0d; }
-    ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
-  </style>
-</head>
-<body class="font-mono text-gray-200 min-h-screen">
+      .loading-dot:nth-child(1) {
+        animation: pulse-dot 1.2s ease-in-out 0s infinite;
+      }
+      .loading-dot:nth-child(2) {
+        animation: pulse-dot 1.2s ease-in-out 0.2s infinite;
+      }
+      .loading-dot:nth-child(3) {
+        animation: pulse-dot 1.2s ease-in-out 0.4s infinite;
+      }
 
-  <div class="max-w-3xl mx-auto px-6 py-16">
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-in {
+        animation: fade-in 0.22s ease-out forwards;
+      }
 
-    <!-- Header -->
-    <div class="mb-12">
-      <h1 class="text-2xl font-medium tracking-tight text-white">engram</h1>
-      <p class="text-muted text-sm mt-1">long-term memory for your data</p>
-    </div>
+      #answer-text p {
+        margin-bottom: 0.65rem;
+      }
+      #answer-text ul {
+        list-style: disc;
+        padding-left: 1.2rem;
+        margin-bottom: 0.65rem;
+      }
+      #answer-text ol {
+        list-style: decimal;
+        padding-left: 1.2rem;
+        margin-bottom: 0.65rem;
+      }
+      #answer-text li {
+        margin-bottom: 0.2rem;
+      }
+      #answer-text strong {
+        color: #2c1f0e;
+      }
+      #answer-text code {
+        background: #ede7d5;
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        font-size: 0.82em;
+        color: #4e2d78;
+      }
 
-    <!-- Input -->
-    <div class="bg-panel border border-border rounded-lg p-4">
-      <textarea
-        id="question"
-        rows="4"
-        placeholder="Ask anything about your notes, emails, or messages..."
-        class="w-full bg-transparent text-gray-200 text-sm placeholder-muted resize-none leading-relaxed"
-      ></textarea>
-      <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
-        <div id="status" class="text-xs text-muted"></div>
-        <div class="flex gap-2">
+      ::-webkit-scrollbar {
+        width: 3px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d8cfba;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body class="font-mono text-ink min-h-screen">
+    <div class="max-w-2xl mx-auto px-5 py-20">
+      <!-- Header -->
+      <div class="mb-14">
+        <div class="flex items-center gap-2.5 mb-1.5">
+          <span class="w-2 h-2 rounded-full bg-purple"></span>
+          <span class="text-lg font-medium tracking-tight text-ink"
+            >engram</span
+          >
+        </div>
+        <p class="text-xs text-faint pl-4">
+          personal memory — obsidian · gmail · slack
+        </p>
+      </div>
+
+      <!-- Input -->
+      <div
+        class="bg-parchment border border-vellum rounded-xl p-5 focus-within:border-gold transition-colors duration-200"
+      >
+        <textarea
+          id="question"
+          rows="3"
+          placeholder="ask anything about your notes, emails, or messages"
+          class="w-full bg-transparent text-sm text-ink resize-none leading-relaxed"
+        ></textarea>
+        <div
+          class="flex items-center justify-between mt-4 pt-4 border-t border-vellum"
+        >
           <button
             onclick="sync()"
-            class="px-3 py-1.5 text-xs text-muted border border-border rounded hover:border-gray-500 hover:text-gray-300 transition-colors duration-200"
+            id="sync-btn"
+            class="text-xs text-faint hover:text-quill transition-colors duration-150"
           >
-            refresh data
+            refresh sources
           </button>
-          <button
-            onclick="ask()"
-            class="px-4 py-1.5 text-xs text-white bg-accent rounded hover:bg-blue-500 transition-colors duration-200"
-          >
-            ask
-          </button>
+          <div class="flex items-center gap-3">
+            <span id="sync-status" class="text-xs text-faint hidden"></span>
+            <button
+              onclick="ask()"
+              id="ask-btn"
+              class="flex items-center gap-1.5 px-4 py-1.5 text-xs text-ivory bg-purple rounded-lg hover:bg-purple-deep transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg
+                id="ask-spinner"
+                class="hidden w-3 h-3 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              <span id="ask-label">ask</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading stages -->
+      <div id="loading" class="hidden mt-8">
+        <div class="flex items-center gap-0">
+          <div class="flex flex-col items-center">
+            <div
+              id="s1-dot"
+              class="w-2 h-2 rounded-full bg-ruled transition-all duration-300"
+            ></div>
+            <span id="s1-label" class="text-xs mt-2 stage pending"
+              >writing query</span
+            >
+          </div>
+          <div
+            id="line-1"
+            class="flex-1 h-px bg-ruled mx-3 mb-4 stage-line"
+          ></div>
+          <div class="flex flex-col items-center">
+            <div
+              id="s2-dot"
+              class="w-2 h-2 rounded-full bg-ruled transition-all duration-300"
+            ></div>
+            <span id="s2-label" class="text-xs mt-2 stage pending"
+              >fetching sources</span
+            >
+          </div>
+          <div
+            id="line-2"
+            class="flex-1 h-px bg-ruled mx-3 mb-4 stage-line"
+          ></div>
+          <div class="flex flex-col items-center">
+            <div
+              id="s3-dot"
+              class="w-2 h-2 rounded-full bg-ruled transition-all duration-300"
+            ></div>
+            <span id="s3-label" class="text-xs mt-2 stage pending"
+              >synthesizing</span
+            >
+          </div>
+        </div>
+        <div class="flex items-center justify-center gap-1.5 mt-6">
+          <div class="loading-dot w-1.5 h-1.5 rounded-full bg-gold"></div>
+          <div class="loading-dot w-1.5 h-1.5 rounded-full bg-gold"></div>
+          <div class="loading-dot w-1.5 h-1.5 rounded-full bg-gold"></div>
+        </div>
+      </div>
+
+      <!-- Answer -->
+      <div id="answer" class="hidden mt-8 fade-in">
+        <div class="bg-parchment border border-gold rounded-xl p-5">
+          <p class="text-xs text-gold-dim uppercase tracking-widest mb-3">
+            answer
+          </p>
+          <div id="answer-text" class="text-sm text-ink leading-relaxed"></div>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div id="sources-section" class="hidden mt-5">
+        <p class="text-xs text-faint uppercase tracking-widest mb-3">sources</p>
+        <div id="results" class="space-y-2"></div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-box" class="hidden mt-8 fade-in">
+        <div class="bg-parchment border border-ruled rounded-xl p-4">
+          <p class="text-xs text-quill uppercase tracking-widest mb-1">error</p>
+          <p id="error-text" class="text-sm text-quill"></p>
         </div>
       </div>
     </div>
 
-    <!-- Answer -->
-    <div id="answer" class="mt-6 hidden">
-      <div class="bg-panel border border-accent border-opacity-40 rounded-lg p-5">
-        <p class="text-xs text-accent uppercase tracking-wider mb-3">answer</p>
-        <p id="answer-text" class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap"></p>
-      </div>
-    </div>
+    <script>
+      async function ask() {
+        const question = document.getElementById("question").value.trim();
+        if (!question) return;
 
-    <!-- Sources -->
-    <div id="sources-section" class="hidden">
-      <p class="text-xs text-muted uppercase tracking-wider mt-6 mb-3">sources</p>
-      <div id="results" class="space-y-3"></div>
-    </div>
+        reset();
+        setLoading(true);
+        setStage(1);
 
-  </div>
+        let fetchData;
+        try {
+          const res = await fetch("/query/fetch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+          fetchData = await res.json();
+          if (!res.ok) {
+            showError(fetchData.detail);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          showError("network error — is the server running?");
+          setLoading(false);
+          return;
+        }
 
-  <script>
-    async function ask() {
-      const question = document.getElementById("question").value.trim();
-      if (!question) return;
+        setStage(2);
+        renderSources(fetchData.results);
+        setStage(3);
 
-      clearResults();
+        let synthData;
+        try {
+          const res = await fetch("/query/synthesize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question, results: fetchData.results }),
+          });
+          synthData = await res.json();
+          if (!res.ok) {
+            showError(synthData.detail);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          showError("network error — is the server running?");
+          setLoading(false);
+          return;
+        }
 
-      // Phase 1: query the database
-      setStatus("querying database...");
-      const fetchRes = await fetch("/query/fetch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
-
-      const fetchData = await fetchRes.json();
-
-      if (!fetchRes.ok) {
-        renderError(fetchData.detail);
-        setStatus("");
-        return;
+        setLoading(false);
+        renderAnswer(synthData.answer);
       }
 
-      renderResults(fetchData.results);
-
-      // Phase 2: synthesize answer
-      setStatus("formulating answer...");
-      const synthRes = await fetch("/query/synthesize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, results: fetchData.results }),
-      });
-
-      const synthData = await synthRes.json();
-      setStatus("");
-
-      if (!synthRes.ok) {
-        renderError(synthData.detail);
-        return;
+      async function sync() {
+        const btn = document.getElementById("sync-btn");
+        const status = document.getElementById("sync-status");
+        btn.disabled = true;
+        status.textContent = "syncing...";
+        status.classList.remove("hidden");
+        try {
+          const res = await fetch("/sync", { method: "POST" });
+          const data = await res.json();
+          status.textContent = data.status;
+        } catch (e) {
+          status.textContent = "sync failed";
+        }
+        btn.disabled = false;
+        setTimeout(() => status.classList.add("hidden"), 3000);
       }
 
-      renderAnswer(synthData.answer);
-    }
-
-    async function sync() {
-      setStatus("syncing...");
-      const res = await fetch("/sync", { method: "POST" });
-      const data = await res.json();
-      setStatus(data.status);
-      setTimeout(() => setStatus(""), 3000);
-    }
-
-    function renderResults(results) {
-      const container = document.getElementById("results");
-      const section = document.getElementById("sources-section");
-
-      if (!results || results.length === 0) {
-        section.classList.add("hidden");
-        return;
+      function setStage(n) {
+        const stages = [
+          { dot: "s1-dot", label: "s1-label", line: null },
+          { dot: "s2-dot", label: "s2-label", line: "line-1" },
+          { dot: "s3-dot", label: "s3-label", line: "line-2" },
+        ];
+        stages.forEach((s, i) => {
+          const dot = document.getElementById(s.dot);
+          const label = document.getElementById(s.label);
+          const line = s.line ? document.getElementById(s.line) : null;
+          label.className = "text-xs mt-2 stage";
+          if (i + 1 < n) {
+            dot.className =
+              "w-2 h-2 rounded-full bg-gold transition-all duration-300";
+            label.classList.add("done");
+            if (line) line.classList.add("done");
+          } else if (i + 1 === n) {
+            dot.className =
+              "w-2 h-2 rounded-full bg-purple ring-2 ring-purple/20 transition-all duration-300";
+            label.classList.add("active");
+          } else {
+            dot.className =
+              "w-2 h-2 rounded-full bg-ruled transition-all duration-300";
+            label.classList.add("pending");
+          }
+        });
       }
 
-      section.classList.remove("hidden");
+      function setLoading(on) {
+        document.getElementById("loading").classList.toggle("hidden", !on);
+        document.getElementById("ask-btn").disabled = on;
+        document.getElementById("ask-spinner").classList.toggle("hidden", !on);
+        document.getElementById("ask-label").textContent = on
+          ? "asking"
+          : "ask";
+      }
 
-      results.forEach(row => {
-        const div = document.createElement("div");
-        div.className = "result-row bg-panel border border-border rounded-lg p-4 pl-5";
+      function renderSources(results) {
+        if (!results || results.length === 0) return;
+        const section = document.getElementById("sources-section");
+        const container = document.getElementById("results");
+        section.classList.remove("hidden");
+        results.forEach((row) => {
+          const src = (row.source || "").toLowerCase();
+          const div = document.createElement("div");
+          div.className =
+            "fade-in bg-parchment border border-vellum rounded-lg p-4";
+          const badge = `<span class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded source-${src} border">
+          <span class="w-1.5 h-1.5 rounded-full dot-${src}"></span>${src}
+        </span>`;
+          const title = row.title
+            ? `<p class="text-sm text-ink mt-2 font-medium">${escHtml(row.title)}</p>`
+            : "";
+          const body = row.body
+            ? `<p class="text-xs text-quill mt-1.5 leading-relaxed">${escHtml(truncate(row.body, 220))}</p>`
+            : "";
+          const date = row.created_at
+            ? `<p class="text-xs text-faint mt-2">${fmtDate(row.created_at)}</p>`
+            : "";
+          div.innerHTML = badge + title + body + date;
+          container.appendChild(div);
+        });
+      }
 
-        const source = row.source ? `<span class="text-xs text-accent uppercase tracking-wider">${row.source}</span>` : "";
-        const title = row.title ? `<p class="text-sm font-medium text-white mt-1">${row.title}</p>` : "";
-        const body = row.body ? `<p class="text-sm text-gray-400 mt-2 leading-relaxed">${truncate(row.body, 300)}</p>` : "";
-        const date = row.created_at ? `<p class="text-xs text-muted mt-3">${formatDate(row.created_at)}</p>` : "";
+      function renderAnswer(text) {
+        if (!text) return;
+        document.getElementById("answer-text").innerHTML = marked.parse(text);
+        document.getElementById("answer").classList.remove("hidden");
+      }
 
-        div.innerHTML = `${source}${title}${body}${date}`;
-        container.appendChild(div);
+      function showError(msg) {
+        document.getElementById("error-text").textContent = msg;
+        document.getElementById("error-box").classList.remove("hidden");
+      }
+
+      function reset() {
+        document.getElementById("results").innerHTML = "";
+        document.getElementById("sources-section").classList.add("hidden");
+        document.getElementById("answer").classList.add("hidden");
+        document.getElementById("answer-text").innerHTML = "";
+        document.getElementById("error-box").classList.add("hidden");
+        ["s1-dot", "s2-dot", "s3-dot"].forEach(
+          (id) =>
+            (document.getElementById(id).className =
+              "w-2 h-2 rounded-full bg-ruled transition-all duration-300"),
+        );
+        ["s1-label", "s2-label", "s3-label"].forEach((id) => {
+          document.getElementById(id).className = "text-xs mt-2 stage pending";
+        });
+        ["line-1", "line-2"].forEach((id) =>
+          document.getElementById(id).classList.remove("done"),
+        );
+      }
+
+      function escHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function truncate(s, n) {
+        return s.length > n ? s.slice(0, n) + "…" : s;
+      }
+      function fmtDate(ts) {
+        return new Date(ts).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      document.getElementById("question").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) ask();
       });
-    }
-
-    function renderError(msg) {
-      const container = document.getElementById("results");
-      container.innerHTML = `<p class="text-sm text-red-400">error: ${msg}</p>`;
-    }
-
-    function renderAnswer(text) {
-      if (!text) return;
-      document.getElementById("answer-text").innerHTML = marked.parse(text);
-      document.getElementById("answer").classList.remove("hidden");
-    }
-
-    function setStatus(msg) { document.getElementById("status").textContent = msg; }
-    function clearResults() {
-      document.getElementById("results").innerHTML = "";
-      document.getElementById("sources-section").classList.add("hidden");
-      document.getElementById("answer").classList.add("hidden");
-      document.getElementById("answer-text").textContent = "";
-    }
-    function truncate(str, n) { return str.length > n ? str.slice(0, n) + "..." : str; }
-    function formatDate(ts) { return new Date(ts).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }); }
-
-    document.getElementById("question").addEventListener("keydown", function(e) {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) ask();
-    });
-  </script>
-
-</body>
+    </script>
+  </body>
 </html>
