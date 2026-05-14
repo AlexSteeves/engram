@@ -4,6 +4,15 @@ Personal long-term memory for AI. Sync your Obsidian notes, Gmail, and Slack int
 
 https://github.com/user-attachments/assets/8f7d919b-d77b-4cb8-8e58-c857bb740c5b
 
+Apply the engram label in Gmail, post to #engram in Slack, or drop a note in your Obsidian folder. Engram ingests all three.
+
+<table>
+  <tr>
+    <td align="center"><img src="assets/gmail.png" width="100%" /><br/><sub>Gmail — engram label</sub></td>
+    <td align="center"><img src="assets/slack.png" width="100%" /><br/><sub>Slack — #engram channel</sub></td>
+    <td align="center"><img src="assets/obsidian_note.png" width="100%" /><br/><sub>Obsidian — vault folder</sub></td>
+  </tr>
+</table>
 
 ## The problem
 
