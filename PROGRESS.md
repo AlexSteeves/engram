@@ -45,8 +45,10 @@
 - Add "sources" label above document cards
 
 ### GitHub + README
-- git init and push to new repo
-- Write README: what it is, why it exists, architecture diagram, setup instructions
+- ✅ git init and push to new repo
+- ✅ Write README
+- README is too long — needs to be more concise
+- Create Canva diagrams to replace text-heavy explanations (architecture flow, why access ≠ data)
 - Record demo video: one question, three sources, one synthesized answer
 - Embed video in README
 
