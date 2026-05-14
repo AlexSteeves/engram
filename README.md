@@ -2,7 +2,7 @@
 
 Personal long-term memory for AI. Sync your Obsidian notes, Gmail, and Slack into Postgres. Ask Claude questions across all three.
 
-<!-- demo video -->
+[<!-- demo video -->](https://github.com/user-attachments/assets/c3f3de75-3dea-41f7-b152-16aabae422da)
 
 ## The problem
 
